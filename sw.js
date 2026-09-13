@@ -1,7 +1,7 @@
 /* Cache-first shell so the home-screen app opens with no network.
    CACHE is stamped by build.mjs with a hash of index.html, so a redeploy
    invalidates the old shell instead of serving it forever. */
-const CACHE = 'salary-app-56dd49843c';
+const CACHE = 'salary-app-2c4b8bc0b5';
 const SHELL = [
   './',
   './index.html',

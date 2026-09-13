@@ -931,12 +931,14 @@ function onClick(e) {
     case 'add-item': {
       const catId = t.dataset.cat;
       const firstType = state.itemTypes.find(x => x.categoryId === catId);
-      // default the date to today when she's looking at the current month
+      // always start on a day inside the shown month: today for the current month,
+      // the 1st otherwise. An empty date input whose min/max sit in a past month
+      // makes iOS Safari refuse to open the picker (it opens on today, out of range).
       const today = new Date();
       const isCurrentMonth = monthKey === currentMonthKey();
       getMonth(monthKey).rows.push({
         id: genId('r'), categoryId: catId, type: 'item',
-        date: isCurrentMonth ? today.getDate() : null,
+        date: isCurrentMonth ? today.getDate() : 1,
         itemTypeId: firstType ? firstType.id : null,
         price: firstType ? Number(firstType.price) || 0 : null,
         qty: 1, amountOverride: null,
@@ -1409,7 +1411,14 @@ function init() {
     if (el && el.tagName === 'INPUT' && el.type === 'number' && document.activeElement === el) el.blur();
   }, { passive: true });
 
-  document.addEventListener('pointerdown', () => { pointerActive = true; }, true);
+  document.addEventListener('pointerdown', e => {
+    pointerActive = true;
+    // legacy rows saved with no date render an empty date input; iOS Safari then
+    // opens the picker on today, which is out of [min,max] for any month but this
+    // one, and it fails to present. Seed the field with the 1st before it opens.
+    const el = e.target;
+    if (el && el.tagName === 'INPUT' && el.type === 'date' && el.value === '' && el.min) el.value = el.min;
+  }, true);
   const releasePointer = () => { pointerActive = false; setTimeout(flushRender, 0); };
   document.addEventListener('pointerup', releasePointer, true);
   document.addEventListener('pointercancel', releasePointer, true);
